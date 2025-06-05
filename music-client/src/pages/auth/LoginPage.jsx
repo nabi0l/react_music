@@ -1,38 +1,25 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import AuthForm from "../../components/AuthForm";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const LoginPage = () => {
   const [error, setError] = useState(null);
+  const { signIn } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleSubmit = async (credentials) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Login failed');
-      }
-
-      const data = await response.json();
+      const { success, error } = await signIn(credentials.email, credentials.password);
       
-      // Store token in localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.userId);
-
-      // Redirect to home page
-      window.location.href = '/';
+      if (!success) {
+        throw new Error(error || 'Login failed');
+      }
+      
+      // Redirect to home page on successful login
+      navigate('/');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to sign in. Please check your credentials.');
     }
   };
 

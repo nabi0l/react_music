@@ -11,23 +11,20 @@ import {
 import { NavLink, useMatch } from "react-router-dom";
 import { useState } from "react";
 import { useCart } from "../../contexts/cartContext";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMusicOpen, setIsMusicOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const { user, signOut } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const { cart } = useCart();
 
-  // Track active routes
-  const isHomeActive = useMatch("/");
-  const isArtistsActive = useMatch("/catalog/artists/*");
+  // Track active routes for navigation highlighting
   const isAlbumsActive = useMatch("/catalog/albums/*");
   const isSinglesActive = useMatch("/catalog/singles/*");
   const isPlaylistsActive = useMatch("/catalog/playlists/*");
-  const isContactActive = useMatch("/contact/*");
-  const isAccountActive = useMatch("/account/*");
 
   const isMusicActive = isAlbumsActive || isSinglesActive || isPlaylistsActive;
 
@@ -49,8 +46,8 @@ const Navbar = () => {
     setIsMusicOpen(false);
   };
 
-  const handleLogout = () => {
-    setIsUserLoggedIn(false);
+  const handleLogout = async () => {
+    await signOut();
     setIsUserDropdownOpen(false);
   };
 
@@ -210,55 +207,57 @@ const Navbar = () => {
               )}
             </NavLink>
 
-            {/* User dropdown or login */}
-            {isUserLoggedIn ? (
-              <div className="relative">
-                <button
-                  onClick={toggleUserDropdown}
-                  className="flex items-center text-gray-600 hover:text-black transition"
-                >
-                  <FaUser className="text-xl" />
-                  <FaChevronDown
-                    className={`ml-1 text-xs transition-transform ${
-                      isUserDropdownOpen ? "transform rotate-180" : ""
-                    }`}
-                  />
-                </button>
-
-                {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <NavLink
-                      to="/account"
-                      onClick={() => setIsUserDropdownOpen(false)}
-                      className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-black"
-                    >
-                      My Account
-                    </NavLink>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-black"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <NavLink
-                to="/login"
-                className={({ isActive }) =>
-                  `text-gray-600 hover:text-black transition ${
-                    isActive ? "text-black font-medium" : ""
-                  }`
-                }
+            {/* User dropdown with login/signup options */}
+            <div className="relative">
+              <button
+                onClick={toggleUserDropdown}
+                className="text-gray-600 hover:text-black transition text-xl"
               >
-                Login
-              </NavLink>
-            )}
+                <FaUser />
+              </button>
+              {isUserDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10">
+                  {user ? (
+                    <>
+                      <NavLink
+                        to="/account"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-black"
+                      >
+                        My Account
+                      </NavLink>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-red-600"
+                      >
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <NavLink
+                        to="/login"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-black"
+                      >
+                        Login
+                      </NavLink>
+                      <NavLink
+                        to="/signup"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        className="block px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-black"
+                      >
+                        Sign Up
+                      </NavLink>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden">
             <button
               onClick={toggleMenu}
               className="text-gray-600 hover:text-black focus:outline-none"
@@ -407,39 +406,59 @@ const Navbar = () => {
                     )}
                   </NavLink>
 
-                  {isUserLoggedIn ? (
-                    <div className="flex space-x-4">
-                      <NavLink
-                        to="/account"
-                        onClick={toggleMenu}
-                        className={({ isActive }) =>
-                          `text-gray-600 hover:text-black ${
-                            isActive ? "text-black font-medium" : ""
-                          }`
-                        }
-                      >
-                        Account
-                      </NavLink>
-                      <button
-                        onClick={handleLogout}
-                        className="text-gray-600 hover:text-black"
-                      >
-                        Logout
-                      </button>
+                  <li className="mt-4">
+                    <div className="flex flex-col space-y-2">
+                      {user ? (
+                        <>
+                          <NavLink
+                            to="/account"
+                            onClick={toggleMenu}
+                            className={({ isActive }) =>
+                              `block py-2 px-4 text-gray-600 hover:bg-gray-50 hover:text-black rounded ${
+                                isActive ? "bg-gray-50 text-black font-medium" : ""
+                              }`
+                            }
+                          >
+                            My Account
+                          </NavLink>
+                          <button
+                            onClick={() => {
+                              handleLogout();
+                              toggleMenu();
+                            }}
+                            className="block w-full text-left py-2 px-4 text-gray-600 hover:bg-gray-50 hover:text-red-600 rounded"
+                          >
+                            Logout
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <NavLink
+                            to="/login"
+                            onClick={toggleMenu}
+                            className={({ isActive }) =>
+                              `block py-2 px-4 text-gray-600 hover:bg-gray-50 hover:text-black rounded ${
+                                isActive ? "bg-gray-50 text-black font-medium" : ""
+                              }`
+                            }
+                          >
+                            Login
+                          </NavLink>
+                          <NavLink
+                            to="/signup"
+                            onClick={toggleMenu}
+                            className={({ isActive }) =>
+                              `block py-2 px-4 text-center bg-black text-white rounded hover:bg-gray-800 transition ${
+                                isActive ? "bg-gray-800" : ""
+                              }`
+                            }
+                          >
+                            Sign Up
+                          </NavLink>
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <NavLink
-                      to="/login"
-                      onClick={toggleMenu}
-                      className={({ isActive }) =>
-                        `text-gray-600 hover:text-black ${
-                          isActive ? "text-black font-medium" : ""
-                        }`
-                      }
-                    >
-                      Login
-                    </NavLink>
-                  )}
+                  </li>
                 </li>
               </ul>
             </nav>

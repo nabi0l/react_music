@@ -1,5 +1,6 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { CartProvider } from "./contexts/cartContext";
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Footer from './ui/navigation/Footer';
 import Navbar from './ui/navigation/Navbar';
 
@@ -23,31 +24,57 @@ import SignupPage from './pages/auth/SignupPage';
 
 import './index.css';
 
+// Protected route component
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
 function App() {
   return (
-    <CartProvider>
-      <Router>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/catalog/genres" element={<Genre />} />
-          <Route path="/catalog/artists" element={<Artist />} />
-          <Route path="/catalog/albums" element={<Albums />} />
-          <Route path="/catalog/singles" element={<Singles />} />
-          <Route path="/catalog/playlists" element={<Playlists />} />
-          <Route path="/store" element={<Store />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path='/login' element={<LoginPage/>}/>
-          <Route path='/signup' element={<SignupPage/>}/>
-          <Route path="/favorites" element={<Favorites />} /> {/* Add this if you want favorites page */}
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/privacy" element={<Privacy />} />
-        </Routes>
-        <Footer />
-      </Router>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/catalog/genres" element={<Genre />} />
+            <Route path="/catalog/artists" element={<Artist />} />
+            <Route path="/catalog/albums" element={<Albums />} />
+            <Route path="/catalog/singles" element={<Singles />} />
+            <Route path="/catalog/playlists" element={<Playlists />} />
+            <Route path="/store" element={<Store />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route 
+              path="/favorites" 
+              element={
+                <ProtectedRoute>
+                  <Favorites />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+          </Routes>
+          <Footer />
+        </Router>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

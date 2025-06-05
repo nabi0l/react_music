@@ -1,16 +1,29 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useContext } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import AuthForm from "../../components/AuthForm";
+import { AuthContext } from "../../contexts/AuthContext";
 
 const SignupPage = () => {
   const [error, setError] = useState(null);
+  const { signUp } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   const handleSubmit = async (credentials) => {
     try {
-      console.log("Signing up with:", credentials);
-      setError(null);
+      const { success, error } = await signUp(
+        credentials.email, 
+        credentials.password,
+        credentials.username
+      );
+      
+      if (!success) {
+        throw new Error(error || 'Signup failed');
+      }
+      
+      // Redirect to home page on successful signup
+      navigate('/');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to create an account. Please try again.');
     }
   };
 
