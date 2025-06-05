@@ -5,17 +5,21 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth');
 const musicRoutes = require('./routes/music');
+const emailRoutes = require('./routes/emailRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'http://localhost:5173',
   credentials: true
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(express.urlencoded({extended:true}));
 
 // Database configuration
 const dbConfig = {
@@ -50,6 +54,8 @@ async function testDbConnection() {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/music', musicRoutes(pool));
+app.use('/api/email', emailRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

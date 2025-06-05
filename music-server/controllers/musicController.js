@@ -1,10 +1,8 @@
-const lastfmService = require('../services/lastfmService');
-
 const musicController = {
   getTrending: async (req, res) => {
     try {
-      const tracks = await lastfmService.getTrendingChristianTracks();
-      res.json(tracks);
+      // Return empty array since Last.fm integration is removed
+      res.json([]);
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch trending tracks' });
     }
@@ -16,8 +14,8 @@ const musicController = {
       if (!query) {
         return res.status(400).json({ error: 'Search query is required' });
       }
-      const results = await lastfmService.searchTracks(query);
-      res.json(results);
+      // Return empty results since Last.fm integration is removed
+      res.json({ results: [] });
     } catch (error) {
       res.status(500).json({ error: 'Failed to search tracks' });
     }
@@ -29,31 +27,25 @@ const musicController = {
       if (!artist || !track) {
         return res.status(400).json({ error: 'Artist and track name are required' });
       }
-      const trackInfo = await lastfmService.getTrackInfo(artist, track);
-      res.json(trackInfo);
+      // Return empty track info since Last.fm integration is removed
+      res.json({});
     } catch (error) {
       res.status(500).json({ error: 'Failed to fetch track details' });
     }
   }
 };
 
-// controllers/musicController.js
+// Keep the trending endpoint for backward compatibility
 const getTrending = async (req, res) => {
   try {
-    // Cache in memory for 1 hour
-    if (!req.app.locals.trendingCache || 
-        Date.now() - req.app.locals.trendingCache.timestamp > 3600000) {
-      const tracks = await lastfmService.getTrendingTracksWithPreviews();
-      req.app.locals.trendingCache = {
-        data: tracks,
-        timestamp: Date.now()
-      };
-    }
-    
-    res.json(req.app.locals.trendingCache.data);
+    // Return empty array since Last.fm integration is removed
+    res.json([]);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch trending tracks' });
   }
 };
+
+// Add the getTrending method to the controller
+musicController.getTrending = getTrending;
 
 module.exports = musicController;
